@@ -1,4 +1,4 @@
-jaxrs-cxf-spring-annotation
-===========================
+Java/Annotation Driven Spring Configuration for JAX-RS
+======================================================
 
-Support for configuring JAX-RS with annotations.
+Proof of concept for the configuration of JAX-RS servers (to be expanded to include clients) using Spring's annotation-driven @Configuration style. 
