@@ -63,74 +63,73 @@ class MyServerConfig {
 
 The ``@JaxRsService`` annotation is a flavour of the ``@Bean`` annotation with the additional effect of registering the bean as a service within this server. That is, the created ``SimpleEchoService`` should be a container-registered bean that is eligible for injection and subject to the various container lifecycle events and services such as ``@PostConstruct`` and ``@PreDestroy``. It should also be compatible with other annotations that are available on factory methods of ``@Configuration`` annotated classes such as ``@Lazy``:
 
-@Configuration
-@EnableJaxRsServer
-class MyServerConfig {
-   @Lazy
-   @JaxRsService
-   public EchoService echoService() {
-      return new SimpleEchoService();
-   }
-}
+    @Configuration
+    @EnableJaxRsServer
+    class MyServerConfig {
+       @Lazy
+       @JaxRsService
+       public EchoService echoService() {
+          return new SimpleEchoService();
+       }
+    }
 
 A server can have various additional properties such as an address and a transport ID which we may add directly onto the server annotation:
 
-@Configuration
-@EnableJaxRsServer(address="/", transport="http://...")
-class MyServerConfig {
-   @JaxRsService
-   public EchoService echoService() {
-      return new SimpleEchoService();
-   }
-}
+    @Configuration
+    @EnableJaxRsServer(address="/", transport="http://...")
+    class MyServerConfig {
+       @JaxRsService
+       public EchoService echoService() {
+          return new SimpleEchoService();
+       }
+    }
 
 We may also want to add multiple servers to the configuration class, and/or allow for extension to help define the second server:
 
-@Configuration
-@EnableJaxRsServer(name="a", address="/a", transport="http://...")
-class MyServerConfig {
-   @JaxRsService
-   public EchoService echoService() {
-      return new SimpleEchoService();
-   }
-}
-
-@Configuration
-@EnableJaxRsServer(name="b", address="/b", transport="http://...")
-class MyOtherServerConfig extends MyServerConfig {
-   @JaxRsService
-   public EchoService echoService() {
-      return new SimpleEchoService();
-   }
-}
+    @Configuration
+    @EnableJaxRsServer(name="a", address="/a", transport="http://...")
+    class MyServerConfig {
+       @JaxRsService
+       public EchoService echoService() {
+          return new SimpleEchoService();
+       }
+    }
+    @Configuration
+    @EnableJaxRsServer(name="b", address="/b", transport="http://...")
+    class MyOtherServerConfig extends MyServerConfig {
+       @JaxRsService
+       public EchoService echoService() {
+          return new SimpleEchoService();
+       }
+    }
 
 The name component could be optional, with the server name generated using some unique property such as a GUID. 
 
 It's common to discover and register services through **component scanning**. So this approach should be additionally compatible with the Spring ``@ComponentScan`` annotation.
 
-@Configuration
-@EnableJaxRsServer
-@ComponentScan(
-   @ComponentScan.Filter({ Path.class })
-)
-class MyOtherServerConfig extends MyServerConfig {
-   @Autowired private EchoService echoService;
-   @JaxRsService
-   public EchoService echoService() {
-      return echoService;
-   }
-}
+    @Configuration
+    @EnableJaxRsServer
+    @ComponentScan(
+       @ComponentScan.Filter({ Path.class })
+    )
+    class MyOtherServerConfig extends MyServerConfig {
+       @Autowired private EchoService echoService;
+       @JaxRsService
+       public EchoService echoService() {
+          return echoService;
+       }
+    }
 
 In addition to this, it makes sense to also allow the wholesale registration of services by annotation, by name, or by assignability:
 
-@Configuration
-@EnableJaxRsServer
-@ComponentScan(
-   @ComponentScan.Filter({ Path.class })
-)
-@JaxRsServices( { Path.class } )
-class MyOtherServerConfig extends MyServerConfig {
-}
+    @Configuration
+    @EnableJaxRsServer
+    @ComponentScan(
+       @ComponentScan.Filter({ Path.class })
+    )
+    @JaxRsServices( { Path.class } )
+    class MyOtherServerConfig extends MyServerConfig {
+    }
 
 Fine-grained Control
 ====================
