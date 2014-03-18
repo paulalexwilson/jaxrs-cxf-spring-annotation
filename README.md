@@ -45,21 +45,21 @@ A Possible API
 
 Let's consider first an API for creating a simple JAX-RS server:
 
-@Configuration
-@EnableJaxRsServer
-class MyServerConfig {
-}
+    @Configuration
+    @EnableJaxRsServer
+    class MyServerConfig {
+    }
 
 This might create a single server within the application context and import the usual CXF specific spring beans via ``/META-INF/cxf/cxf.xml``. Of course, no actual services would be registered with the server and therefore the instantiation would fail. Let's consider adding a service:
 
-@Configuration
-@EnableJaxRsServer
-class MyServerConfig {
-   @JaxRsService
-   public EchoService echoService() {
-      return new SimpleEchoService();
-   }
-}
+    @Configuration
+    @EnableJaxRsServer
+    class MyServerConfig {
+    @JaxRsService
+    public EchoService echoService() {
+           return new SimpleEchoService();
+       }
+    }
 
 The ``@JaxRsService`` annotation is a flavour of the ``@Bean`` annotation with the additional effect of registering the bean as a service within this server. That is, the created ``SimpleEchoService`` should be a container-registered bean that is eligible for injection and subject to the various container lifecycle events and services such as ``@PostConstruct`` and ``@PreDestroy``. It should also be compatible with other annotations that are available on factory methods of ``@Configuration`` annotated classes such as ``@Lazy``:
 
