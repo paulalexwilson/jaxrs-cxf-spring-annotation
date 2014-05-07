@@ -15,7 +15,7 @@ Since its 3rd major release, Spring has shipped with support for code-centric co
 
 Besides the more obviously advantages of type-safe configuration, easier refactoring and improved navigability, the ability to directly embed application context configuration directly within a test suite makes them both easier to read and more legible. 
 
-Another, more subtle advantage of the code-centric configuration style, is that is allows framework developers to offer a more **graduated** response to increasing complexity. With XML-namespace configuration, when the API fails, the next step is usually to abandon the approach and instead directly register the factory bean. With a code-based API, the recourse may just be to override a more general or fundamental template method.
+Another, more subtle advantage of the code-centric configuration style, is that is allows framework developers to offer a more **graduated** response to increasing configuration complexity. With XML-namespace configuration, when the API fails, the next step is usually to abandon the approach and instead directly register the factory bean. With a code-based API, the recourse may just be to override a more general or fundamental template method higher up the configuration API's type hierarchy. 
 
 Case Study - Spring MVC
 =======================
@@ -33,7 +33,7 @@ This dual API is an example of how a framework can offer a graduated response to
 Design Goals
 ============
 
- * to offer a comparable alternative to the jaxrs: XML namespace
+ * to offer a comparable alternative to the **jaxrs:** XML namespace
  * to clearly and declaratively define JAX-RS servers in Java code
  * to define and configure the various server collaborators such as services, interceptors and features
  * interoperability with Spring and Spring's bean lifecycle
@@ -50,7 +50,7 @@ Let's consider first an API for creating a simple JAX-RS server:
     class MyServerConfig {
     }
 
-This might create a single server within the application context and import the usual CXF specific spring beans via ``/META-INF/cxf/cxf.xml``. Of course, no actual services would be registered with the server and therefore the instantiation would fail. Let's consider adding a service:
+This might create a single server within the application context and import the usual CXF specific spring beans via ``/META-INF/cxf/cxf.xml``. Of course, no actual services would be registered with the server and therefore the server bootstrapping and configuration phase would fail (service-less servers are disallowed). Let's consider adding a service:
 
     @Configuration
     @EnableJaxRsServer
@@ -61,7 +61,7 @@ This might create a single server within the application context and import the 
        }
     }
 
-The ``@JaxRsService`` annotation is a flavour of the ``@Bean`` annotation with the additional effect of registering the bean as a service within this server. That is, the created ``SimpleEchoService`` should be a container-registered bean that is eligible for injection and subject to the various container lifecycle events and services such as ``@PostConstruct`` and ``@PreDestroy``. It should also be compatible with other annotations that are available on factory methods of ``@Configuration`` annotated classes such as ``@Lazy``:
+The ``@JaxRsService`` annotation is a flavour of the ``@Bean`` annotation with the additional effect of registering the bean as a service within this server. That is, the created ``SimpleEchoService`` should be a container-registered bean that is eligible for injection and subject to the typical container lifecycle events and services such as ``@PostConstruct`` and ``@PreDestroy``. It should also be compatible with other annotations that are available on factory methods of ``@Configuration`` annotated classes such as ``@Lazy``:
 
     @Configuration
     @EnableJaxRsServer
@@ -73,7 +73,7 @@ The ``@JaxRsService`` annotation is a flavour of the ``@Bean`` annotation with t
        }
     }
 
-A server can have various additional properties such as an address and a transport ID which we may add directly onto the server annotation:
+Remaining compatible with Spring's existing factory method annotations is of course desirable. A server can have various additional properties such as an ``address`` and a ``transport ID`` which we may add directly onto the server annotation:
 
     @Configuration
     @EnableJaxRsServer(address="/", transport="http://...")
@@ -84,7 +84,7 @@ A server can have various additional properties such as an address and a transpo
        }
     }
 
-We may also want to add multiple servers to the configuration class, and/or allow for extension to help define the second server:
+We may also want to add **multiple servers** to the configuration class, and/or allow for extension to help define the second server:
 
     @Configuration
     @EnableJaxRsServer(name="a", address="/a", transport="http://...")
@@ -103,9 +103,7 @@ We may also want to add multiple servers to the configuration class, and/or allo
        }
     }
 
-The name component could be optional, with the server name generated using some unique property such as a GUID. 
-
-It's common to discover and register services through **component scanning**. So this approach should be additionally compatible with the Spring ``@ComponentScan`` annotation.
+It's often desirable to discover and register services through **component scanning**. So this approach should be additionally compatible with the Spring ``@ComponentScan`` annotation.
 
     @Configuration
     @EnableJaxRsServer
@@ -120,7 +118,7 @@ It's common to discover and register services through **component scanning**. So
        }
     }
 
-In addition to this, it makes sense to also allow the wholesale registration of services by annotation, by name, or by assignability:
+In addition to this, it makes sense to also allow the wholesale registration of services by annotation:
 
     @Configuration
     @EnableJaxRsServer
@@ -128,8 +126,40 @@ In addition to this, it makes sense to also allow the wholesale registration of 
        @ComponentScan.Filter({ Path.class })
     )
     @JaxRsServices( { Path.class } )
-    class MyOtherServerConfig extends MyServerConfig {
+    class AnnotationBasedRegistration extends MyServerConfig {
     }
 
-Fine-grained Control
+by name:
+
+    @Configuration
+    @EnableJaxRsServer
+    @ComponentScan(
+       @ComponentScan.Filter({ Path.class })
+    )
+    @JaxRsServices( named = {"firstService", "secondService"})
+    class NamedServiceRegistration extends MyServerConfig {
+    }
+
+by assignable type:
+
+    @Configuration
+    @EnableJaxRsServer
+    @ComponentScan(
+       @ComponentScan.Filter({ Path.class })
+    )
+    @JaxRsServices( type = FirstRestService.class, SecondRestService.class )
+    class TypeBasedRegistration extends MyServerConfig {
+    }
+    
+and a combination of the above. 
+
+Find grained control
 ====================
+
+One particular requirement that is desirable for both production and test scenarios is composability and inheritance. Common configuration can be centralised, test code can inherit and alter production configuration for test scenarios, common set up or tear down code can be mixed together, etc. Spring bean configuration provides an analog of configuration inheritance through its ``abstract`` and ``parent`` attributes. 
+
+
+
+Annotation Composition
+======================
+
