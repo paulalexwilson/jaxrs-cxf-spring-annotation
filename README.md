@@ -163,3 +163,19 @@ One particular requirement that is desirable for both production and test scenar
 Annotation Composition
 ======================
 
+**Annotation composition** is a technique to simplify annotation-based APIs be combining multiple annotations onto a single annotation. Annotations that are eligble for composition onto other annotations, along with some accompanying infrastructure to read an interpret such annotations, are known as **meta-annotations**. A quick example::
+
+    @Transactional(readonly = true)
+    @Repository
+    @Scope("prototype")
+    public @interface AcmeRepository { } 
+
+Here, usage of the ``@AcmeRepository`` on a component bean will enable the various Spring container services defined as meta-annotations. The meta-annotation approach has a few benefits:
+
+ * It can decouple application code from a 3rd-party framework
+ * It can centralise annotation-based configuration 
+
+Any framework API that is based upon annotations should include support for meta-annotations. Fortunately, Spring ships with excellent support for meta-annotation discovery, as well as attribute inheritance and override support. 
+
+Let's look at how this could be leveraged for JAX-RS annotation-based configuration.
+
